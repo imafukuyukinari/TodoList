@@ -75,11 +75,12 @@ class Todo {
                     $this->title,
                     $this->detail
                 );
-        $dbh = new PDO(DSN, USERNAME, PASSWORD);
+        $pdo = new PDO(DSN, USERNAME, PASSWORD);
         $result = $pdo->query($query);
         
         var_dump($result);
         exit;
+
     }
 }
 
