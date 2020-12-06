@@ -69,7 +69,7 @@ class Todo{
                 $todo_list[$index]['display_status'] = self::getDisplayStatus($todo['status']);
             }
         }
-
+        
         return $todo_list;
     }
 
