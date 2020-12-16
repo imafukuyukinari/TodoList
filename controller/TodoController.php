@@ -11,17 +11,11 @@ class TodoController{
 
     public function detail(){
         $todo_id = $_GET['todo_id'];
-
-
         $todo = Todo::findById($todo_id);
-
         return $todo;
     }
 
     public function new(){
-        $title = $_POST['title'];
-        $detail = $_POST['detail'];
-
         $data = array(
             'title' => $_POST['title'],
             'detail'=> $_POST['detail'],
@@ -31,21 +25,22 @@ class TodoController{
         $validation->setData($data);
         if($validation->check() === false){
             $error_msgs = $validation->getErrorMessages();
-
-
+            
             session_start();
             $_SESSION['error_msgs'] = $error_msgs;
 
             $params = sprintf('?title=%s&detail=%s', $_POST['title'], $_POST['detail']);
             header(sprintf('Location: ./new.php%s', $params));
         }
-        
-        exit;
 
-        // $todo = new Todo;
-        // $todo->setTitle($title);
-        // $todo->setDetail($detail);
-        // $result = $todo->save();
+        $valid_data = $validation->getData();
+        var_dump($valid_data);
+
+
+        $todo = new Todo;
+        $todo->setTitle($title);
+        $todo->setDetail($detail);
+        $result = $todo->save();
 
         $result = false;
         if($result === false){
