@@ -17,13 +17,12 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
     if(isset($_GET['detail'])){
         $detail = $_GET['detail'];
     }
-
-    
 }
 
 session_start();
 $error_msgs = $_SESSION['error_msgs'];
 unset($_SESSION['error_msgs']);
+
 
 ?>
 
