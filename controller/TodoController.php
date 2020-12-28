@@ -1,173 +1,114 @@
 <?php
-require_once('./../../model/Todo.php');
-require_once('./../../validation/TodoValidation.php');
+require_once("../../validation/todoValidation.php");
 
-
-class TodoController{
-    public function index(){
-        $todo_list = Todo::findAll();
-        return $todo_list;
+class TodoController {
+    public function index() {
+        return Todo::findAll();
     }
 
-    public function detail(){
+    public function detail() {
         $todo_id = $_GET['todo_id'];
-        if(!$todo_id){
-            header('Location: ./../error/404.php');
-            return;
+
+        return Todo::findById($todo_id);
+    }
+
+    public function new() {
+        $data = array(
+            "title" => $_POST['title'],
+            "detail" => $_POST['detail'],
+        );
+
+        $validation = new TodoValidation;
+        $validation->setData($data);
+        if($validation->check() === false) {
+            $error_msgs = $validation->getErrorMessages();
+
+            //セッションにエラーメッセージを追加
+            session_start();
+            $_SESSION['error_msgs'] = $error_msgs;
+
+            $params = sprintf("?title=%s&detail=%s", $title, $detail);
+            header("Location: ./new.php" . $params);
         }
 
-        if(Todo::isExistById($todo_id) === false){
-            header('Location: ./../error/404.php');
-            return;
+        $validate_data = $validation->getData();
+        $title = $validate_data['title'];
+        $detail = $validate_data['detail'];
+
+        $todo = new Todo;
+        $todo->setTitle($title);
+        $todo->setDetail($detail);
+        $result = $todo->save();
+
+        if($result === false) {
+            $params = sprintf("?title=%s&detail=%s", $title, $detail);
+            header("Location: ./new.php" . $params);
         }
 
+        header( "Location: ./index.php" );
+    }
+
+    public function edit() {
+        $todo_id = $_GET['todo_id'];
         $todo = Todo::findById($todo_id);
         return $todo;
     }
 
-    public function new(){
+    public function update() {
         $data = array(
-            'title' => $_POST['title'],
-            'detail'=> $_POST['detail'],
+            "id" => $_POST['todo_id'],
+            "title" => $_POST['title'],
+            "detail" => $_POST['detail']
         );
 
-        $validation = new Todovalidation;
+        $validation = new TodoValidation;
         $validation->setData($data);
-        if($validation->check() === false){
+        if($validation->check() === false) {
             $error_msgs = $validation->getErrorMessages();
 
+            //セッションにエラーメッセージを追加
             session_start();
             $_SESSION['error_msgs'] = $error_msgs;
 
-            $params = sprintf('?title=%s&detail=%s', $_POST['title'], $_POST['detail']);
-            header(sprintf('Location: ./new.php%s', $params));
-            return;
+            $params = sprintf("?title=%s&detail=%s", $title, $detail);
+            header("Location: ./new.php" . $params);
         }
 
-        $valid_data = $validation->getData();
-
+        $validate_data = $validation->getData();
+        $todo_id = $validate_data['id'];
+        $title = $validate_data['title'];
+        $detail = $validate_data['detail'];
 
         $todo = new Todo;
-        $todo->setTitle($valid_data['title']);
-        $todo->setDetail($valid_data['detail']);
-        $result = $todo->save();
-
-        if($result === false){
-            $params = sprintf('?title=%s&detail=%s', $valid_data['title'], $valid_data['detail']);
-            header(sprintf('Location: ./new.php%s', $params));
-            return;
-        }
-
-        header('Location: ./index.php');
-    }
-
-    public function edit(){
-        $todo_id = '';
-        $params = array();
-        if($_SERVER['REQUEST_METHOD'] === 'GET'){
-            if(isset($_GET['todo_id'])){
-                $todo_id = $_GET['todo_id'];
-            }
-            if(isset($_GET['title'])){
-                $params['title'] = $_GET['title'];
-            }
-            if(isset($_GET['detail'])){
-                $params['detail'] = $_GET['detail'];
-            }
-        }
-
-
-        if(!$todo_id){
-            header('Location: ./../error/404.php');
-            return;
-        }
-
-        if(Todo::isExistById($todo_id) === false){
-            header('Location: ./../error/404.php');
-            return;
-        }
-
-        $todo =Todo::findbyId($todo_id);
-        if(!$todo){
-            header('Location: ./../error/404.php');
-            return;
-        }
-
-
-        $data = array(
-            'todo' => $todo,
-            'params' => $params,
-        );
-        return $data;
-    }
-    
-    public function update(){
-        if(!$_POST['todo_id']){
-            session_start();
-            $_SESSION['error_msgs'] = '指定したIDに該当するデータがありません。';
-            header('Location: ./index.php');
-            return;
-        }
-        if(Todo::isExistById($_POST['todo_id']) === false){
-            $params = sprintf('?todo_id=%stitle=%s&detail=%s', $_POST['todo_id'], $_POST['title'], $_POST['detail']);
-            header(sprintf('Location: ./edit.php%s', $params));
-            return;
-        }
-
-        $data = array(
-            'todo_id' => $_POST['todo_id'],
-            'title' => $_POST['title'],
-            'detail'=> $_POST['detail'],
-        );
-
-
-        $validation = new Todovalidation;
-        $validation->setData($data);
-        if($validation->check() === false){
-            $error_msgs = $validation->getErrorMessages();
-
-            session_start();
-            $_SESSION['error_msgs'] = $error_msgs;
-
-            $params = sprintf('?todo_id=%s&title=%s&detail=%s', $_POST['todo_id'], $_POST['title'], $_POST['detail']);
-            header(sprintf('Location: ./edit.php%s', $params));
-            return;
-        }
-
-        $valid_data = $validation->getData();
-
-
-        $todo = new Todo;
-        $todo->setId($valid_data['todo_id']);
-        $todo->setTitle($valid_data['title']);
-        $todo->setDetail($valid_data['detail']);
+        $todo->setTitle($title);
+        $todo->setDetail($detail);
         $result = $todo->update();
 
-        if($result === false){
-            $params = sprintf('?title=%s&detail=%s', $valid_data['title'], $valid_data['detail']);
-            header(sprintf('Location: ./edit.php%s', $params));
-            return;
+        $params = sprintf("?todo_id=%s", $todo_id);
+        if($result === false) {
+            header("Location: ./edit.php" . $params);
         }
 
-        header('Location: ./index.php');
+        header("Location: ./detail.php" . $params);
     }
 
-    public function delete(){
-        $todo_id = $_POST['todo_id'];
-        if(!$todo_id){
-            error_log(sprintf("[TodoController][delete]todo_id not found. todo_id: %s", $todo_id));
-            return false;
-        }
-
-        if(Todo::isExistById($todo_id) === false){
-            error_log(sprintf("[TodoController][delete]record is not found. todo_id: %s", $todo_id));
-            return false;
+    public function delete() {
+        $todo_id = $_GET['todo_id'];
+        $is_exist = Todo::isExistById($todo_id);
+        if(!$is_exist) {
+            session_start();
+            $_SESSION['error_msgs'] = [sprintf("id=%sに該当するレコードが存在しません。", $todo_id)];
+            header("Location: ./index.php");
         }
 
         $todo = new Todo;
         $todo->setId($todo_id);
         $result = $todo->delete();
+        if($result === false) {
+            session_start();
+            $_SESSION['error_msgs'] = [sprintf("削除に失敗しました。id=%s", $todo_id)];
+        }
 
-        return $result;
+        header("Location: ./index.php");
     }
 }
