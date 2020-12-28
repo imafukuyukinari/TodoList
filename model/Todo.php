@@ -1,216 +1,153 @@
 <?php
-require_once('./../../config/database.php');
-
-class Todo{
-    const STATUS_INCOMPLETE = 0;
-    const STATUS_COMPLETE = 1;
-
-    const STATUS_INCOMPLETE_TXT = '未完了';
-    const STATUS_COMPLETE_TXT = '完了';
-
+class Todo {
     public $id;
     public $title;
     public $detail;
-    public $status;
 
-    public function getId(){
+    public function getId() {
         return $this->id;
     }
 
-    public function setId($id){
+    public function setId($id) {
         $this->id = $id;
     }
 
-
-    public function getTitle(){
+    public function getTitle() {
         return $this->title;
     }
 
-    public function setTitle($title){
+    public function setTitle($title) {
         $this->title = $title;
     }
 
-    public function getDetail(){
+    public function getDetail() {
         return $this->detail;
     }
 
-    public function setDetail($detail){
+    public function setDetail($detail) {
         $this->detail = $detail;
     }
-    
-    public function getStatus(){
+
+    public function getStatus() {
         return $this->status;
     }
 
-    public function setStatus($status){
+    public function setStatus($status) {
         $this->status = $status;
     }
 
+    public static function findByQuery($query) {
+        $dbh = new PDO(DSN, USERNAME, PASSWORD);
+        $stmh = $dbh->query($query);
 
-    public static function findByQuery($query){
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query($query);
-        if($stmh){
-            $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
-        }else{
-            $todo_list = array();
+        if($stmh) {
+            $result = $stmh->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $result = [];
         }
-
-        if($todo_list && count($todo_list) > 0){
-            foreach($todo_list as $index => $todo){
-                $todo_list[$index]['display_status'] = self::getDisplayStatus($todo['status']);
-            }
-        }
-
-        return $todo_list;
+        return $result;
     }
 
-    public static function  findAll(){
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query('select * from todos');
-        if($stmh){
-            $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
-        }else{
-            $todo_list = array();
+    public static function findAll() {
+        $dbh = new PDO(DSN, USERNAME, PASSWORD);
+        $query = "SELECT * FROM todos";
+        $stmh = $dbh->query($query);
+        if($stmh) {
+            $result = $stmh->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $result = [];
         }
-
-        if($todo_list && count($todo_list) > 0){
-            foreach($todo_list as $index => $todo){
-                $todo_list[$index]['display_status'] = self::getDisplayStatus($todo['status']);
-            }
-        }
-
-        return $todo_list;
+        return $result;
     }
 
-    public static function findById($todo_id){
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query(sprintf('select * from todos where id = %s;', $todo_id));
-        if($stmh){
-            $todo = $stmh->fetch(PDO::FETCH_ASSOC);
-        }else{
-            $todo = array();
-        }   
-
-        if($todo){
-            $todo['display_status'] = self::getDisplayStatus($todo['status']);
+    public static function findById($todo_id) {
+        $query = sprintf('SELECT * FROM todos WHERE id = %s', $todo_id);
+        $dbh = new PDO(DSN, USERNAME, PASSWORD);
+        $stmh = $dbh->query($query);
+        if($stmh) {
+            $result = $stmh->fetch(PDO::FETCH_ASSOC);
+        } else {
+            $result = [];
         }
-
-        return $todo;
+        return $result;
     }
 
-    public static function getDisplayStatus($status){
-        if($status == self::STATUS_INCOMPLETE){
-            return self::STATUS_INCOMPLETE_TXT;
-        }else if($status == self::STATUS_COMPLETE){
-            return selfSTATUS_COMPLETE_TXT;
+    public function save() {
+        $query = sprintf("INSERT INTO `todos` (`title`, `detail`, `status`, `created_at`, `updated_at`)VALUES ('%s', '%s', 0, NOW(), NOW());", $this->title, $this->detail);
+
+        try {
+            $dbh = new PDO(DSN, USERNAME, PASSWORD);
+
+            // トランザクション開始
+            $dbh->beginTransaction();
+
+            $stmt = $dbh->prepare($query);
+            $result = $stmt->execute();
+
+            $dbh->commit();
+        } catch (PDOException $e) {
+            // ロールバック
+            $dbh->rollBack();
+
+            echo $e->getMessage();
+            $result = false;
         }
-        
-        return "";
-    }
-    
-    public function save(){
-        try{
-            throw new Exception('エラー!!!!!!!');
-            $query = sprintf("INSERT INTO `todos` (`title`, `detail`, `status`,
-                `created_at`, `updated_at`)
-            VALUES ('%s', '%s', 0, NOW(), NOW())",
-                $this->title,
-                $this->detail
-            );
-
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-
-        $pdo->beginTransaction();
-
-        $result = $pdo->query($query);
-
-        $pdo->commit();
-
-        }catch(Exception $e){
-            error_log('新規作成に失敗しました。');
-            error_log($e->getMessage());
-            error_log($e->getTraceAsString());
-
-            return false;
-        }
-
 
         return $result;
     }
 
-    public function update(){
-        try{
-            $query = sprintf("UPDATE `todos` SET `title` = '%s', `detail` = '%s', `updated_at` = '%s' WHERE id = %s",
-                $this->title,
-                $this->detail,
-                date('Y-m-d H:i:s'),
-                $this->id
-            );
+    public function update() {
+        $query = sprintf("UPDATE `todos` SET `title` = %s AND `detail` = %s WHERE `id` = %s", $this->title, $this->detail, $thid->id);
 
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
+        try {
+            $dbh = new PDO(DSN, USERNAME, PASSWORD);
 
-        $pdo->beginTransaction();
+            // トランザクション開始
+            $dbh->beginTransaction();
 
-        $result = $pdo->query($query);
+            $stmt = $dbh->prepare($query);
+            $result = $stmt->execute();
 
-        $pdo->commit();
+            $dbh->commit();
+        } catch (PDOException $e) {
+            // ロールバック
+            $dbh->rollBack();
 
-        }catch(Exception $e){
-            error_log('更新に失敗しました。');
-            error_log($e->getMessage());
-            error_log($e->getTraceAsString());
-
-            $pdo->rollBack();
-
-            return false;
-        }
-
-
-        return $result;
-    }
-
-
-    public static function isExistById($todo_id){
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query(sprintf('select * from todos where id = %s;', $todo_id));
-        if($stmh){
-            $todo = $stmh->fetch(PDO::FETCH_ASSOC);
-        }else{
-            $todo = array();
-        }   
-
-        if($todo){
-            return true;
-        }
-        return false;
-    }
-
-    public function delete(){
-        try{
-            $query = sprintf("DELETE FROM todos WHERE id = %s",
-                $this->id
-            );
-
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-
-        $pdo->beginTransaction();
-
-        $result = $pdo->query($query);
-
-        $pdo->commit();
-
-        }catch(Exception $e){
-            error_log('削除に失敗しました。');
-            error_log($e->getMessage());
-            error_log($e->getTraceAsString());
-
-            $pdo->rollBack();
-
-            return false;
+            echo $e->getMessage();
+            $result = false;
         }
 
         return $result;
     }
+
+    public function delete() {
+        try {
+            $dbh = new PDO(DSN, USERNAME, PASSWORD);
+            $dbh->beginTransaction();
+            
+            $query = sprintf("DELETE FROM `todos` WHERE id = %s", $this->id);
+            $stmt = $dbh->prepare($query);
+            $result = $stmt->execute();
+
+            $dbh->commit();
+        } catch (PDOException $e) {
+            $dbh->rollBack();
+
+            echo $e->getMessage();
+            $result = false;
+        }
+        return $result;
+    }
+
+    public static function isExistById($todo_id) {
+        $dbh = new PDO(DSN, USERNAME, PASSWORD);
+        $query = sprintf('SELECT * FROM `todos` WHERE id = %s', $todo_id);
+        $stmh = $dbh->query($query);
+        if(!$stmh) {
+            return false;
+        }
+        return true;
+    }
+}
 
 }
