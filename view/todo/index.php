@@ -1,64 +1,63 @@
 <?php
-require_once('./../../controller/TodoController.php');
+require_once '../../config/database.php';
+require_once '../../model/todo.php';
+require_once '../../controller/TodoController.php';
 
-// $controller = new TodoController;
-// $todo_list = $controller->index();
+if(isset($_GET['action']) & $_GET['action'] === 'delete') {
+    $action = new TodoController;
+    $todo_list = $action->delete();
+    return;
+}
+
+$action = new TodoController;
+$todo_list = $action->index();
 
 session_start();
+// セッション情報の取得
 $error_msgs = $_SESSION['error_msgs'];
-unset($_SESSION['error_msgs']);
 
+//セッション削除
+unset($_SESSION["error_msgs"]);
 ?>
-
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TODOリスト</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body>
-<div><a href="./new.php">新規作成</a></div>
-    <?php if($todo_list):?>
-    <ul>
-        <?php foreach($todo_list as $todo):?>
-        <li><a href="./detail.php?todo_id=<?php echo $todo['id'] ?>"><?php echo $todo['title'];?></a> : <?php echo $todo['display_status'];?> <button class="delete-btn">削除</button></li>
-        <?php endforeach;?>
-    </ul>
-        <?php else: ?>
-            <p>データなし</p>
-        <?php endif; ?>
-
-        <?php if($error_msgs):?>
-         <div>
+    <div>
+        <a href="./new.php">新規作成</a>
+    </div>
+    <div>
+        <?php if($todo_list):?>
             <ul>
-                <?php foreach((array)$error_msgs as $error_msg):?>
-                    <li><?php echo $error_msg;?></li>
+                <?php foreach($todo_list as $todo):?>
+                    <li><a href="./detail.php?todo_id=<?php echo $todo['id'];?>"><?php echo $todo['title'];?></a><button class="delete_btn" data-id="<?php echo $todo['id'];?>">削除</button></li>
                 <?php endforeach;?>
             </ul>
+        <?php else:?>
+            <div>データなし</div>
+        <?php endif;?>
+    </div>
+    <?php if($error_msgs):?>
+        <div>
+            <ul>
+            <?php foreach($error_msgs as $error_msg):?>
+                <li><?php echo $error_msg; ?></li>
+            <?php endforeach;?>
+            </ul>
         </div>
-    <?endif;?>
-    <script src="./../../public/js/jquery-3.5.1.min.js"></script>
-    <script>
-    $(".delete-btn").click(function() {
-        let data = {};
-        data.todo_id = 1;
-
-        $.ajax({
-            url: './delete.php',
-            type: 'post',
-            data: data
-        }).then(
-            function(data){
-                let json = JSON.parse(data);
-                console.log('success', json);
-            },
-            function(){
-                console.log('fail');
-                alert('fail');
-            }
-        )
-    });
-    
-    </script>
+    <?php endif;?>
 </body>
 </html>
+<script>
+$(".delete_btn").on('click', function() {
+    // alert($(this).data('id'));
+    const todo_id = $(this).data('id');
+    window.location.href = "./index.php?action=delete&todo_id=" + todo_id;
+});
+</script>
