@@ -15,3 +15,11 @@ CRUD機能　JSによるDOM操作　Ajaxによる非同期処理　CSSでのレ�
 # 使用言語・環境
 
 PHP 7.1　JQuery　HTML/CSS　Docker　LEMP環境　フルスクラッチにて作成
+
+
+# 開発環境
+
+<img width="550" alt="スクリーンショット 2020-12-29 10 13 55" src="https://user-images.githubusercontent.com/49267983/103252117-ba1cde00-49be-11eb-9162-cba27380b75e.png">
+
+
+# 
